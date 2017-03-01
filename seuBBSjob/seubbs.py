@@ -1,6 +1,7 @@
 import urllib
 import urllib2
 import re
+import Tkinter
 from Tkinter import *
 
 class BBS:
@@ -22,6 +23,10 @@ class BBS:
 		string=re.compile('<title>.*</title>')
 		items=re.findall(string,self.pageCode)
 		for item in items:
+			remove=re.compile(r"<title>")
+			item=re.sub(remove,"",item).strip()
+			remove=re.compile(r"</title>")
+			item=re.sub(remove,"",item).strip()
 			return item
 		return "error"
 	def getContent(self):
@@ -29,7 +34,7 @@ class BBS:
 		items=re.findall(string,self.pageCode)
 		for item in items:
 			remove=re.compile(r"prints..")
-			item=re.sub(remove,"<content>",item).strip()
+			item=re.sub(remove,"",item).strip()
 			remove=re.compile(r"\\n")
 			item=re.sub(remove,"\r\n",item).strip()
 			return item
@@ -46,20 +51,24 @@ class Application(Frame):
 		self.bbs.getLink()
 		self.createWidgets(self.bbs.getTitle(),self.bbs.getContent())
 	def createWidgets(self,title,content):
-		self.nextbutton=Button(self,text="nextinfo",command=self.nextinfo)
-		self.nextbutton.pack()
 		self.titlelabel=Label(self,text=title)
 		self.titlelabel.pack()
-		self.contentlabel=Label(self,text=content,\
-		wraplength=1000)
+		self.fm=Frame(self)
+		self.contentlabel=Text(self.fm,height=50,width=100)
+		self.contentlabel.insert(1.0,content)
 		self.contentlabel.pack()
+		self.fm.pack()
+		self.nextbutton=Button(self,text="next info",command=self.nextinfo)
+		self.nextbutton.pack()
 	def nextinfo(self):
 		self.bbs.getnext()
 		while self.bbs.getLink()==0:
 			tmptxt="connect error"+self.bbs.getnext()
-			self.contentlabel.config(text=tmptxt)
+			self.contentlabel.delete(1.0,Tkinter.END)
+			self.contentlabel.insert(1.0,self.bbs.getContent())
 		self.titlelabel.config(text=self.bbs.getTitle())
-		self.contentlabel.config(text=self.bbs.getContent())
-
+		self.contentlabel.delete(1.0,Tkinter.END)
+		self.contentlabel.insert(1.0,self.bbs.getContent())
+	
 app=Application()
 app.mainloop()
